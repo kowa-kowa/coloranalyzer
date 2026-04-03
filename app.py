@@ -78,4 +78,50 @@ def main():
         fig, ax = plt.subplots(figsize=(10, 10))
         
         # 1. 5nmスペクトル軌跡
-        cie_data = get_preci
+        cie_data = get_precise_5nm_data()
+        ax.plot(cie_data[:,1], cie_data[:,2], color='black', linewidth=1.5, zorder=3, label="Spectrum Locus")
+        # 純紫軌跡
+        ax.plot([cie_data[0,1], cie_data[-1,1]], [cie_data[0,2], cie_data[-1,2]], color='black', linewidth=1.5, zorder=3)
+
+        # 2. 波長ラベル
+        for val in cie_data:
+            if val[0] % label_step == 0:
+                ax.annotate(f"{int(val[0])}", (val[1], val[2]), textcoords="offset points", 
+                            xytext=(5,5), fontsize=8, alpha=0.6)
+
+        # 3. sRGB三角形
+        srgb_tri = np.array([[0.64, 0.33], [0.30, 0.60], [0.15, 0.06], [0.64, 0.33]])
+        ax.plot(srgb_tri[:,0], srgb_tri[:,1], color='red', linestyle='--', linewidth=1, label="sRGB Gamut", zorder=4)
+
+        # 4. 全ピクセルのラスタープロット
+        ax.scatter(xy[:, 0], xy[:, 1], c=flat_pixels, s=dot_size, alpha=dot_alpha, edgecolors='none', zorder=2)
+
+        # 5. D65白色点
+        ax.scatter([0.3127], [0.3290], color='black', marker='+', s=100, label='D65', zorder=5)
+
+        # グラフ設定
+        ax.set_xlim(0, 0.85)
+        ax.set_ylim(0, 0.9)
+        ax.set_aspect('equal')
+        ax.set_xlabel('CIE x')
+        ax.set_ylabel('CIE y')
+        ax.grid(True, linestyle=':', alpha=0.4)
+        ax.legend()
+        ax.set_title("CIE 1931 xy Chromaticity Diagram (5nm resolution)")
+
+        # レイアウト表示
+        col1, col2 = st.columns([1.5, 1])
+        with col1:
+            st.pyplot(fig)
+        with col2:
+            st.image(raw_img, caption="入力画像", use_container_width=True)
+            st.write(f"解析プロット点数: {len(flat_pixels)}")
+            st.markdown("""
+            ### 解析のヒント
+            - **色域外の色**: 赤い破線(sRGB)の外側にある点は、一般的なモニターでは本来の色を再現できない領域です。
+            - **分布の密度**: プロットが集中している場所が、その画像の支配的な色相を示します。
+            - **透明度の調整**: サイドバーの「プロット透明度」を下げると、データの重なり（密度）がより明確に見えます。
+            """)
+
+if __name__ == "__main__":
+    main()
